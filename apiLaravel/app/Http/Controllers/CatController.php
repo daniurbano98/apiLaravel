@@ -7,25 +7,38 @@ use Illuminate\Http\Request;
 
 class CatController extends Controller
 {
-    public function getBreed(Request $request)
+    public function getBreeds(Request $request)
     {
         
         $client = new Client();
 
-        $url = "https://api.thecatapi.com/v1/images/search"; 
+        $url = "https://api.thecatapi.com/v1/breeds"; 
 
-        
+
+        $query = [];
+
+       
+        if ($request->has('limit')) {
+            $limit = $request->query('limit');
+            $query['limit'] = $limit;
+        }
+
+        if ($request->has('page')) {
+            $page = $request->query('page');
+            $query['page'] = $page;
+        }
+    
         $response = $client->request('GET', $url, [
             'headers' => [
+                'Content-Type' => 'application/json',
                 'x-api-key' => env('API_CAT_KEY')
-            ]
+            ],
+            'query' => $query
+            
         ]);
-
-        $breed = $request->query('breed_ids', 'beng'); 
-
-        
+    
         $data = json_decode($response->getBody()->getContents(), true);
-
+    
         return response()->json($data);
     }
 
@@ -34,31 +47,128 @@ class CatController extends Controller
 
         $client = new Client();
 
-        $url = "https://api.thedogapi.com/v1/images"; 
+        $url = "https://api.thecatapi.com/v1/images/search"; 
 
-        $limit = $request->query('limit', 10); 
-        $page = $request->query('page', 0);
-        $order = $request->query('order', 'DESC');
-        $sub_id = $request->query('sub_id', 'user1');
-        $breed_ids = $request->query('breed_ids', '1,4,28');
-        $category_ids = $request->query('category_ids', '4');
-        $format = $request->query('format', 'json');
-        $original_filename = $request->query('original_filename', null);
-        $user_id = $request->query('user_id', null);
+        $query = [];
 
+       
+        if ($request->has('size')) {
+            $size = $request->query('size');
+            $query['size'] = $size;
+        }
 
+        if ($request->has('order')) {
+            $order = $request->query('order');
+            $query['order'] = $order;
+        }
+
+        if ($request->has('limit')) {
+            $limit = $request->query('limit');
+            $query['limit'] = $limit;
+        }
+    
         $response = $client->request('GET', $url, [
             'headers' => [
-                'x-api-key' => env('API_DOG_KEY')
-            ]
+                'Content-Type' => 'application/json',
+                'x-api-key' => env('API_CAT_KEY')
+            ],
+            'query' => $query
+            
         ]);
-
         
         $data = json_decode($response->getBody()->getContents(), true);
 
         return response()->json($data);
 
 
+    }
 
+    public function getImage(Request $request, $id)
+    {
+
+        $client = new Client();
+
+        $url = "https://api.thecatapi.com/v1/images/{$id}"; 
+
+        $query = [];
+
+        if ($request->has('size')) {
+            $size = $request->query('size');
+            $query['size'] = $size;
+        }
+
+        $response = $client->request('GET', $url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'x-api-key' => env('API_CAT_KEY')
+            ],
+            'query' => $query
+            
+        ]);
+        
+        $data = json_decode($response->getBody()->getContents(), true);
+
+        return response()->json($data);
+    }
+
+
+    public function getSources(Request $request)
+    {
+        $client = new Client();
+
+        $url = "https://api.thecatapi.com/v1/sources"; 
+
+        $query = [];
+
+        if ($request->has('limit')) {
+            $limit = $request->query('limit');
+            $query['limit'] = $limit;
+        }
+
+        if ($request->has('page')) {
+            $page = $request->query('page');
+            $query['page'] = $page;
+        }
+
+        $response = $client->request('GET', $url, [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'x-api-key' => env('API_CAT_KEY')
+            ],
+            'query' => $query
+            
+        ]);
+        
+        $data = json_decode($response->getBody()->getContents(), true);
+
+        return response()->json($data);
+    }
+
+    public function uploadImage(Request $request) //POST
+    {
+
+        $client = new Client();
+
+        $url = "https://api.thecatapi.com/v1/images/upload";
+        $file = $request->file('image'); 
+
+
+        $response = $client->request('POST', $url, [
+            'headers' => [      
+                'x-api-key' => env('API_CAT_KEY')
+            ],
+            'multipart' => [
+                [
+                    'name' => 'file',
+                    'contents' => file_get_contents($file->getPathname()),
+                    'filename' => $file->getClientOriginalName()
+                ]
+            ]
+            
+        ]);
+
+        $data = json_decode($response->getBody()->getContents(), true);
+
+        return response()->json($data);
     }
 }

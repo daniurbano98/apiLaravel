@@ -28,7 +28,9 @@ Route::prefix('spotify')->group(function () {
 
 
 Route::prefix('cats')->group(function () {
-    Route::get('getBreed',[CatController::class,'getBreed']);
+    Route::get('getBreeds',[CatController::class,'getBreeds']);
     Route::get('getImages',[CatController::class,'getImages']);
-
+    Route::get('getImage/{id}',[CatController::class,'getImage']);
+    Route::get('getSources',[CatController::class,'getSources']);
+    Route::post('uploadImage',[CatController::class,'uploadImage']);
 });
