@@ -38,7 +38,7 @@ Route::prefix('spotify')->group(function () {
 });
 
 
-Route::prefix('cats')->middleware(['jwt.auth'])->group(function () {
+Route::prefix('cats')->group(function () {
     Route::get('getBreeds',[CatController::class,'getBreeds']);
     Route::get('getImages',[CatController::class,'getImages']);
     Route::get('getImage/{id}',[CatController::class,'getImage']);

@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Firebase\JWT\JWT;
+use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
 
@@ -32,17 +33,30 @@ class AuthController extends Controller
     // Inicio de sesión y generación del token
     public function login(Request $request)
     {
+        
         $credentials = $request->only('email', 'password');
 
-        try {
-            if (!$token = JWTAuth::attempt($credentials)) { //si se genera token será true, por lo tanto se verifica esto
-                return response()->json(['message' => 'Credenciales inválidas'], 401);
-            }
-        } catch (JWTException $e) {
-            return response()->json(['message' => 'Error al generar el token'], 500);
+        if (Auth::attempt($credentials)) {
+            // El usuario ha sido autenticado correctamente
+            $user = Auth::user();
+            // Realizar las acciones necesarias con el usuario autenticado
+        } else {
+            // Las credenciales no son válidas
+            return response()->json(['error' => 'credenciales incorrectas']);
         }
 
-        return response()->json(['token' => $token]);
+        $payload = [
+            'sub' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'iat' => time(),
+            'exp' => time() + (60 * 120) // Token expira en 2 horas
+        ];
+
+            $token = JWT::encode($payload, config('jwt.secret'),'HS256');
+            // Devolvemos el token JWT al cliente
+
+            return response()->json(['token' => $token]);
     }
 
     public function logout()
