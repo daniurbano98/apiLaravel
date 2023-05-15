@@ -6,6 +6,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 
 
 class CatController extends Controller
@@ -173,43 +174,51 @@ class CatController extends Controller
 
     public function uploadImage(Request $request) //POST
     {
+        try {
+            $client = new Client();
+    
+            $url = "https://api.thecatapi.com/v1/images/upload";
+            $file = $request->file('image');
+    
+            $token = $request->bearerToken();
+    
+            if ($this->auhtenticate($token)) {
 
-        $client = new Client();
-
-        $url = "https://api.thecatapi.com/v1/images/upload";
-        $file = $request->file('image'); 
-
-
-        $token = $request->bearerToken();
-
-        
-        if($this->auhtenticate( $token )){
-
-            $response = $client->request('POST', $url, [
-                'headers' => [      
-                    'x-api-key' => env('API_CAT_KEY')
-                ],
-                'multipart' => [
-                    [
-                        'name' => 'file',
-                        'contents' => file_get_contents($file->getPathname()),
-                        'filename' => $file->getClientOriginalName()
+                if($file==null){
+                    return response()->json(['error' => 'La imagen es nula'], 500);
+                }else{
+                    $response = $client->request('POST', $url, [
+                    'headers' => [
+                        'x-api-key' => env('API_CAT_KEY')
+                    ],
+                    'multipart' => [
+                        [
+                            'name' => 'file',
+                            'contents' => file_get_contents($file->getPathname()),
+                            'filename' => $file->getClientOriginalName()
+                        ]
                     ]
-                ]
+                ]);
+                }
                 
-            ]);
+            }
+    
+            $data = json_decode($response->getBody()->getContents(), true);
+    
+            return response()->json($data);
+            
+        } catch (FileException $e) {
+            return response()->json(['error' => 'Ocurrió un error al cargar la imagen.'], 500);
         }
-
-        $data = json_decode($response->getBody()->getContents(), true);
-
-        return response()->json($data);
     }
+    
 
 
     public function auhtenticate($token)
     {
         try{
             $jwt = JWT::decode($token, new Key(env('JWT_SECRET'), 'HS256'));
+            // procesará el token JWT y, si la firma es válida y el token no ha caducado, devolverá el contenido decodificado del token en un formato legible.
 
             return true;
 
