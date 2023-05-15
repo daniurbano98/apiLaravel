@@ -39,7 +39,6 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             // El usuario ha sido autenticado correctamente
             $user = Auth::user();
-            // Realizar las acciones necesarias con el usuario autenticado
         } else {
             // Las credenciales no son válidas
             return response()->json(['error' => 'credenciales incorrectas']);
